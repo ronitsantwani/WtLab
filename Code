@@ -1,0 +1,64 @@
+#include <Servo.h>
+
+#define trigPin 11
+#define echoPin 10
+#define servoPin 9
+
+Servo waterServo;
+
+bool isServoOpen = false; // track if the servo is already open
+
+void setup() {
+  Serial.begin(9600);
+
+  waterServo.attach(servoPin);
+
+  pinMode(trigPin, OUTPUT);
+  pinMode(echoPin, INPUT);
+
+  digitalWrite(trigPin, LOW);
+  waterServo.write(0);
+  delay(1000);
+}
+
+void loop() {
+  float distance = measureDistance();
+
+  if (distance > 0 && distance < 10) {
+    if (!isServoOpen) {
+      waterServo.write(90);   // Open the servo
+      isServoOpen = true;
+    }
+  } else {
+    if (isServoOpen) {
+      waterServo.write(0);    // Close the servo
+      isServoOpen = false;
+    }
+  }
+
+  delay(200);
+}
+
+float measureDistance() {
+  digitalWrite(trigPin, LOW);
+  delayMicroseconds(2);
+
+  digitalWrite(trigPin, HIGH);
+  delayMicroseconds(10);
+  digitalWrite(trigPin, LOW);
+
+  long duration = pulseIn(echoPin, HIGH, 30000);
+
+  if (duration == 0) {
+    Serial.println("No Echo");
+    return -1;
+  }
+
+  float distance = duration * 0.0343 / 2;
+
+  Serial.print("Distance: ");
+  Serial.print(distance);
+  Serial.println(" cm");
+
+  return distance;
+}
